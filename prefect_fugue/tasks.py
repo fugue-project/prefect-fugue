@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, Dict, List
 
 import fugue
 import fugue_sql
@@ -130,9 +130,15 @@ def fsql(
     ) -> dict:
         logger = get_run_logger()
         logger.debug(query)
-        return fugue_sql.fsql(query, *_normalize_yields(yields), **kwargs).run(
-            engine, engine_conf
-        )
+        dag = fugue_sql.fsql(query, *_normalize_yields(yields), **kwargs)
+        dag.run(engine, engine_conf)
+        result: Dict[str, Any] = {}
+        for k, v in dag.yields.items():
+            if isinstance(v, fugue.dataframe.YieldedDataFrame):
+                result[k] = v.result  # type: ignore
+            else:
+                result[k] = v  # type: ignore
+        return result
 
     return run_fsql(
         query=query, yields=yields, engine=engine, engine_conf=engine_conf, **kwargs
