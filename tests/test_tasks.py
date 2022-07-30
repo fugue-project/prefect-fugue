@@ -19,7 +19,7 @@ def test_dummy():
     myflow()
 
 
-def test_fsql():
+def _test_fsql():
     # simplest case
     @flow(retries=3)
     def test1():
@@ -60,7 +60,7 @@ def test_fsql():
     test4(d=1)
 
 
-def test_transform():
+def _test_transform():
     def t1(df: List[List[Any]]) -> List[List[Any]]:
         return df
 
