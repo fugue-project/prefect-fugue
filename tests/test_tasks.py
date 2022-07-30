@@ -7,7 +7,7 @@ from prefect_fugue import fsql, transform
 from prefect_fugue.tasks import _normalize_yields, _truncate_name
 
 
-def test_dummy():
+def _test_dummy():
     @task
     def hello():
         print("hello")
@@ -19,34 +19,34 @@ def test_dummy():
     myflow()
 
 
-def _test_fsql():
+def test_fsql():
     # simplest case
     @flow(retries=3)
-    def test1():
+    def test_fsql1():
         result = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
         wf_assert(result, lambda dfs: dfs["x"].as_array() == [[0]])
 
-    test1()
+    test_fsql1()
 
     # with simple parameter
     @flow(retries=3)
-    def test2():
+    def test_fsql2():
         result = fsql("""CREATE [[{{x}}]] SCHEMA a:int YIELD DATAFRAME AS x""", x=0)
         wf_assert(result, lambda dfs: dfs["x"].as_array() == [[0]])
 
-    test2()
+    test_fsql2()
 
     # with Prefect parameter
     @flow(retries=3)
-    def test3(x):
+    def test_fsql3(x):
         result = fsql("""CREATE [[{{x}}]] SCHEMA a:int YIELD DATAFRAME AS x""", x=x)
         wf_assert(result, lambda dfs: dfs["x"].as_array() == [[1]])
 
-    test3(x=1)
+    test_fsql3(x=1)
 
     # with df parameter
     @flow(retries=3)
-    def test4(d):
+    def test_fsql4(d):
         result1 = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
         # pass result1 as yields
         result2 = fsql(
@@ -57,7 +57,7 @@ def _test_fsql():
         wf_assert(result2, lambda dfs: dfs["y"].as_array() == [[1]])
         wf_assert(result3, lambda dfs: dfs["y"].as_array() == [[0]])
 
-    test4(d=1)
+    test_fsql4(d=1)
 
 
 def _test_transform():
