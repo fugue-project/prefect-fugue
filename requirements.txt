@@ -1,0 +1,2 @@
+prefect>=2.0b12
+fugue>=0.7.0
