@@ -60,7 +60,7 @@ def test_fsql():
     test_fsql4(d=1)
 
 
-def _test_transform():
+def test_transform():
     def t1(df: List[List[Any]]) -> List[List[Any]]:
         return df
 
@@ -70,7 +70,7 @@ def _test_transform():
 
     # simplest case
     @flow(retries=3)
-    def test1():
+    def test_transform1():
         dfs = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
 
         result = transform(dfs["x"], t1, schema="*", force_output_fugue_dataframe=True)
@@ -79,7 +79,7 @@ def _test_transform():
         result = transform(dfs["x"], t2, force_output_fugue_dataframe=True)
         wf_assert(result, lambda df: df.as_array() == [[0]])
 
-    test1()
+    test_transform1()
 
     @task
     def provide_func():
@@ -91,7 +91,7 @@ def _test_transform():
 
     # with dependency
     @flow(retries=3)
-    def test2():
+    def test_transform2():
         dfs = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
 
         result = transform(
@@ -102,7 +102,7 @@ def _test_transform():
         result = transform(dfs["x"], provide_func(), force_output_fugue_dataframe=True)
         wf_assert(result, lambda df: df.as_array() == [[0]])
 
-    test2()
+    test_transform2()
 
 
 def test_truncate_name():
