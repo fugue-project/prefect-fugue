@@ -1,7 +1,6 @@
 from typing import Any, List
 
 from prefect import flow, task
-from prefect.task_runners import SequentialTaskRunner
 from pytest import raises
 
 from prefect_fugue import fsql, transform
@@ -13,7 +12,7 @@ def test_dummy():
     def hello():
         print("hello")
 
-    @flow(task_runner=SequentialTaskRunner())
+    @flow(timeout_seconds=20)
     def myflow():
         hello()
 
@@ -22,7 +21,7 @@ def test_dummy():
 
 def test_fsql():
     # simplest case
-    @flow
+    @flow(timeout_seconds=20)
     def test1():
         result = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
         wf_assert(result, lambda dfs: dfs["x"].as_array() == [[0]])
@@ -30,7 +29,7 @@ def test_fsql():
     test1()
 
     # with simple parameter
-    @flow
+    @flow(timeout_seconds=20)
     def test2():
         result = fsql("""CREATE [[{{x}}]] SCHEMA a:int YIELD DATAFRAME AS x""", x=0)
         wf_assert(result, lambda dfs: dfs["x"].as_array() == [[0]])
@@ -38,7 +37,7 @@ def test_fsql():
     test2()
 
     # with Prefect parameter
-    @flow
+    @flow(timeout_seconds=20)
     def test3(x):
         result = fsql("""CREATE [[{{x}}]] SCHEMA a:int YIELD DATAFRAME AS x""", x=x)
         wf_assert(result, lambda dfs: dfs["x"].as_array() == [[1]])
@@ -46,7 +45,7 @@ def test_fsql():
     test3(x=1)
 
     # with df parameter
-    @flow
+    @flow(timeout_seconds=20)
     def test4(d):
         result1 = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
         # pass result1 as yields
@@ -70,7 +69,7 @@ def test_transform():
         return df
 
     # simplest case
-    @flow
+    @flow(timeout_seconds=20)
     def test1():
         dfs = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
 
@@ -91,7 +90,7 @@ def test_transform():
         return "*"
 
     # with dependency
-    @flow
+    @flow(timeout_seconds=20)
     def test2():
         dfs = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
 
