@@ -12,7 +12,7 @@ def test_dummy():
     def hello():
         print("hello")
 
-    @flow(timeout_seconds=20)
+    @flow(retries=3)
     def myflow():
         hello()
 
@@ -21,7 +21,7 @@ def test_dummy():
 
 def test_fsql():
     # simplest case
-    @flow(timeout_seconds=20)
+    @flow(retries=3)
     def test1():
         result = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
         wf_assert(result, lambda dfs: dfs["x"].as_array() == [[0]])
@@ -29,7 +29,7 @@ def test_fsql():
     test1()
 
     # with simple parameter
-    @flow(timeout_seconds=20)
+    @flow(retries=3)
     def test2():
         result = fsql("""CREATE [[{{x}}]] SCHEMA a:int YIELD DATAFRAME AS x""", x=0)
         wf_assert(result, lambda dfs: dfs["x"].as_array() == [[0]])
@@ -37,7 +37,7 @@ def test_fsql():
     test2()
 
     # with Prefect parameter
-    @flow(timeout_seconds=20)
+    @flow(retries=3)
     def test3(x):
         result = fsql("""CREATE [[{{x}}]] SCHEMA a:int YIELD DATAFRAME AS x""", x=x)
         wf_assert(result, lambda dfs: dfs["x"].as_array() == [[1]])
@@ -45,7 +45,7 @@ def test_fsql():
     test3(x=1)
 
     # with df parameter
-    @flow(timeout_seconds=20)
+    @flow(retries=3)
     def test4(d):
         result1 = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
         # pass result1 as yields
@@ -69,7 +69,7 @@ def test_transform():
         return df
 
     # simplest case
-    @flow(timeout_seconds=20)
+    @flow(retries=3)
     def test1():
         dfs = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
 
@@ -90,7 +90,7 @@ def test_transform():
         return "*"
 
     # with dependency
-    @flow(timeout_seconds=20)
+    @flow(retries=3)
     def test2():
         dfs = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
 
