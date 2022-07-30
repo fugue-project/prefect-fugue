@@ -1,2 +1,2 @@
-prefect>=2.0b12
+prefect>=2.0.1
 fugue>=0.7.0
