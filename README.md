@@ -1,7 +1,5 @@
 # Prefect Fugue Integration
 
-
-
 [![GitHub release](https://img.shields.io/github/release/fugue-project/prefect-fugue.svg)](https://GitHub.com/fugue-project/prefect-fugue)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/prefect-fugue.svg)](https://pypi.python.org/pypi/prefect-fugue/)
 [![PyPI license](https://img.shields.io/pypi/l/prefect-fugue.svg)](https://pypi.python.org/pypi/prefect-fugue/)
@@ -38,22 +36,34 @@ It's also recommended to register Fugue blocks into your current Prefect workspa
 prefect block register -m prefect_fugue
 ```
 
-### Write and run a flow
+### Hello World
 
 ```python
 from prefect import flow
-from prefect_fugue.tasks import (
-    goodbye_prefect_fugue,
-    hello_prefect_fugue,
-)
+from prefect_fugue import fugue_engine, fsql
 
 
 @flow
-def example_flow():
-    hello_prefect_fugue
-    goodbye_prefect_fugue
+def hello_flow():
+    fsql("""
+    CREATE [[0]] SCHEMA a:int
+    PRINT
+    """)
 
-example_flow()
+hello_flow()
+
+
+@flow
+def world_flow(n, engine):
+    with fugue_engine(engine):
+        fsql("""
+        CREATE [[0],[1]] SCHEMA a:int
+        SELECT * WHERE a>0
+        PRINT
+        """, n=n)
+
+world_flow(1, "duckdb")  # running using duckdb (assuming duckdb is installed)
+world_flow(2, "fugue/my_databricks")  # running using my_databricks block on Prefect
 ```
 
 ## Resources
