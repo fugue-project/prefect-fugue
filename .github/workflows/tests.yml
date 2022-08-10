@@ -34,4 +34,10 @@ jobs:
           PREFECT_ORION_DATABASE_CONNECTION_URL: "sqlite+aiosqlite:///./orion-tests.db"
         run: |
           prefect orion database reset -y
-          make test
+          coverage run --branch -m pytest tests -vv
+          coverage report
+      - name: "Upload coverage to Codecov"
+        if: matrix.python-version == 3.8
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
