@@ -1,8 +1,18 @@
-# prefect-fugue
+# Prefect Fugue Integration
 
-## Welcome!
 
-Fugue Prefect integration
+
+[![GitHub release](https://img.shields.io/github/release/fugue-project/prefect-fugue.svg)](https://GitHub.com/fugue-project/prefect-fugue)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/prefect-fugue.svg)](https://pypi.python.org/pypi/prefect-fugue/)
+[![PyPI license](https://img.shields.io/pypi/l/prefect-fugue.svg)](https://pypi.python.org/pypi/prefect-fugue/)
+[![PyPI version](https://badge.fury.io/py/prefect-fugue.svg)](https://pypi.python.org/pypi/prefect-fugue/)
+[![codecov](https://codecov.io/gh/fugue-project/prefect-fugue/branch/master/graph/badge.svg?token=J4UB06GWO1)](https://codecov.io/gh/fugue-project/prefect-fugue)
+[![Doc](https://readthedocs.org/projects/prefect-fugue/badge)](https://prefect-fugue.readthedocs.org)
+
+[![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](http://slack.fugue.ai)
+
+
+This project provides the Fugue tasks, context and blocks for Prefect.
 
 ## Getting Started
 
@@ -20,6 +30,12 @@ Install `prefect-fugue` with `pip`:
 
 ```bash
 pip install prefect-fugue
+```
+
+It's also recommended to register Fugue blocks into your current Prefect workspace:
+
+```bash
+prefect block register -m prefect_fugue
 ```
 
 ### Write and run a flow
