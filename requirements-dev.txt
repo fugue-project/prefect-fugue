@@ -9,7 +9,10 @@ isort
 pre-commit
 pytest-cov
 pytest-asyncio
+pytest-mock
 mock; python_version < '3.8'
 mkdocs-gen-files
 interrogate
 coverage
+fugue[duckdb,dask]
+fugue-jupyter

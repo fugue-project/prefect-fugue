@@ -1,27 +1,20 @@
 from typing import Any, List
 
+from fugue import register_global_conf
+from fugue.constants import FUGUE_CONF_WORKFLOW_CHECKPOINT_PATH
 from prefect import flow, task
+from prefect.task_runners import SequentialTaskRunner
 from pytest import raises
 
 from prefect_fugue import fsql, transform
 from prefect_fugue.tasks import _normalize_yields, _truncate_name
 
 
-def _test_dummy():
-    @task
-    def hello():
-        print("hello")
+def test_fsql(tmpdir):
+    register_global_conf({FUGUE_CONF_WORKFLOW_CHECKPOINT_PATH: str(tmpdir)})
 
-    @flow(retries=3)
-    def myflow():
-        hello()
-
-    myflow()
-
-
-def test_fsql():
     # simplest case
-    @flow(retries=3)
+    @flow(retries=3, task_runner=SequentialTaskRunner())
     def test_fsql1():
         result = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
         wf_assert(result, lambda dfs: dfs["x"].as_array() == [[0]])
@@ -36,18 +29,23 @@ def test_fsql():
 
     test_fsql2()
 
-    # with Prefect parameter
+    # with Prefect parameter, also with very long query
+    s = (
+        "as;f;lkasdf;lkasd;lfalk;sdflk;asdl;kf;lkasdf;lkas;l;;"
+        "lka;sldkgfj;lkasdf;lkasd;lkfa;lksdf;lajsdf;lka;lskdf"
+    )
+
     @flow(retries=3)
     def test_fsql3(x):
-        result = fsql("""CREATE [[{{x}}]] SCHEMA a:int YIELD DATAFRAME AS x""", x=x)
-        wf_assert(result, lambda dfs: dfs["x"].as_array() == [[1]])
+        result = fsql("""CREATE [["{{x}}"]] SCHEMA a:str YIELD DATAFRAME AS x""", x=x)
+        wf_assert(result, lambda dfs: dfs["x"].as_array() == [[x]])
 
-    test_fsql3(x=1)
+    test_fsql3(x=s)
 
     # with df parameter
     @flow(retries=3)
     def test_fsql4(d):
-        result1 = fsql("""CREATE [[0]] SCHEMA a:int YIELD DATAFRAME AS x""")
+        result1 = fsql("""CREATE [[0]] SCHEMA a:int YIELD FILE AS x""")
         # pass result1 as yields
         result2 = fsql(
             """SELECT a+{{d}} AS a FROM x YIELD DATAFRAME AS y""", result1, d=d
@@ -58,6 +56,27 @@ def test_fsql():
         wf_assert(result3, lambda dfs: dfs["y"].as_array() == [[0]])
 
     test_fsql4(d=1)
+
+    @task
+    def gen_query():
+        return """
+            CREATE [[0]] SCHEMA a:int YIELD LOCAL DATAFRAME AS x
+            CREATE [[1]] SCHEMA a:int YIELD FILE AS y
+            """
+
+    @flow(retries=3)
+    def test_fsql5():
+        result = fsql(gen_query(), checkpoint=False)
+        wf_assert(result, lambda dfs: dfs["x"].as_array() == [[0]])
+
+    test_fsql5()
+
+    @flow()
+    def test_fsql6():
+        fsql("CREATE SCHEMA")
+
+    with raises(SyntaxError):
+        test_fsql6()
 
 
 def test_transform():
@@ -108,6 +127,8 @@ def test_transform():
 def test_truncate_name():
     raises(ValueError, lambda: _truncate_name(None))
     assert _truncate_name("abc") == "abc"
+    assert _truncate_name("abc", max_len=3) == "abc"
+    assert _truncate_name("abc", max_len=2) == "ab..."
 
 
 def test_normalize_yields():

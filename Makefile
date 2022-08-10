@@ -12,6 +12,7 @@ devenv:
 	pip install -r requirements.txt
 	pip install -r requirements-dev.txt
 	pre-commit install
+	fugue-jupyter install startup
 
 docs:
 	rm -rf docs/api
@@ -26,6 +27,11 @@ package:
 	rm -rf dist/*
 	python3 setup.py sdist
 	python3 setup.py bdist_wheel
+
+lab:
+	mkdir -p tmp
+	pip install .
+	jupyter lab --port=8888 --ip=0.0.0.0 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.allow_origin='*'
 
 test:
 	python3 -bb -m pytest tests/
