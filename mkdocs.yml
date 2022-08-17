@@ -49,5 +49,6 @@ plugins:
 nav:
     - Home: index.md
     - Tasks: tasks.md
-    - Flows: flows.md
+    - Blocks: blocks.md
+    - Context: context.md
 
