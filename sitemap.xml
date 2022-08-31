@@ -2,22 +2,22 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://fugue-project.github.io/prefect-fugue/</loc>
-         <lastmod>2022-08-17</lastmod>
+         <lastmod>2022-08-31</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fugue-project.github.io/prefect-fugue/blocks/</loc>
-         <lastmod>2022-08-17</lastmod>
+         <lastmod>2022-08-31</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fugue-project.github.io/prefect-fugue/context/</loc>
-         <lastmod>2022-08-17</lastmod>
+         <lastmod>2022-08-31</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fugue-project.github.io/prefect-fugue/tasks/</loc>
-         <lastmod>2022-08-17</lastmod>
+         <lastmod>2022-08-31</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>

@@ -11,7 +11,7 @@
         <link rel="canonical" href="https://fugue-project.github.io/prefect-fugue/">
       
       <link rel="icon" href="img/favicon.ico">
-      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.4.0">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.4.2">
     
     
       
@@ -267,14 +267,35 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#hello-world" class="md-nav__link">
-    Hello World
+  <a href="#creating-a-block" class="md-nav__link">
+    Creating a Block
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-a-spark-cluster-inside-a-flow" class="md-nav__link">
+    Using a Spark Cluster Inside a Flow
   </a>
   
 </li>
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-locally-before-running-map-jobs-on-spark-dask-and-ray" class="md-nav__link">
+    Testing Locally Before Running Map Jobs on Spark, Dask, and Ray
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-sql-on-any-spark-dask-and-duckdb" class="md-nav__link">
+    Running SQL on any Spark, Dask, and Duckdb
+  </a>
   
 </li>
       
@@ -394,14 +415,35 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#hello-world" class="md-nav__link">
-    Hello World
+  <a href="#creating-a-block" class="md-nav__link">
+    Creating a Block
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-a-spark-cluster-inside-a-flow" class="md-nav__link">
+    Using a Spark Cluster Inside a Flow
   </a>
   
 </li>
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#testing-locally-before-running-map-jobs-on-spark-dask-and-ray" class="md-nav__link">
+    Testing Locally Before Running Map Jobs on Spark, Dask, and Ray
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-sql-on-any-spark-dask-and-duckdb" class="md-nav__link">
+    Running SQL on any Spark, Dask, and Duckdb
+  </a>
   
 </li>
       
@@ -447,6 +489,20 @@
 <p><a href="http://slack.fugue.ai"><img alt="Slack Status" src="https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&amp;style=social" /></a></p>
 <p>This project provides the Fugue tasks, context and blocks for Prefect.</p>
 <h2 id="getting-started">Getting Started</h2>
+<p>Fugue is a unified interface for distributed computing that lets users execute Python, pandas, and SQL code on Spark, Dask and Ray without rewrites.</p>
+<p>The most common use cases are:</p>
+<ul>
+<li>Accelerating or scaling existing Python and pandas code by bringing it to Spark or Dask with minimal rewrites.
+Using FugueSQL to define end-to-end workflows on top of pandas, Spark, and Dask DataFrames. FugueSQL is an enhanced SQL interface that can invoke Python code with added keywords.</li>
+<li>Maintaining one codebase for pandas, Spark, Dask and Ray projects. Logic and execution are decoupled through Fugue, enabling users to be focused on their business logic rather than writing framework-specific code.</li>
+<li>Improving iteration speed of big data projects. Fugue seamlessly scales execution to big data after local development and testing. By removing PySpark code, unit tests can be written in Python or pandas and ran locally without spinning up a cluster.</li>
+</ul>
+<p><img alt="img" src="docs/img/fugue.png" /></p>
+<p>The best way to get started with Fugue is to work through the 10 minute tutorials:</p>
+<ul>
+<li><a href="https://fugue-tutorials.readthedocs.io/tutorials/quick_look/ten_minutes.html">Fugue in 10 minutes</a></li>
+<li><a href="https://fugue-tutorials.readthedocs.io/tutorials/quick_look/ten_minutes_sql.html">FugueSQL in 10 minutes</a></li>
+</ul>
 <h3 id="python-setup">Python setup</h3>
 <p>Requires an installation of Python 3.7+.</p>
 <p>We recommend using a Python virtual environment manager such as pipenv, conda or virtualenv.</p>
@@ -458,36 +514,108 @@
 <p>It's also recommended to register Fugue blocks into your current Prefect workspace:</p>
 <div class="highlight"><pre><span></span><code>prefect block register -m prefect_fugue
 </code></pre></div>
-<h3 id="hello-world">Hello World</h3>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">flow</span>
-<span class="kn">from</span> <span class="nn">prefect_fugue</span> <span class="kn">import</span> <span class="n">fugue_engine</span><span class="p">,</span> <span class="n">fsql</span>
+<h3 id="creating-a-block">Creating a Block</h3>
+<p>This will allow a creation of the Fugue Engine block</p>
+<p><img alt="img" src="https://fugue-tutorials.readthedocs.io/_images/prefect_fugue_block.png" /></p>
+<p>There are 4 items that need to be filled to create a block.</p>
+<ul>
+<li>Block Name - name that will be used to use the block.</li>
+<li>Engine Name - one of the Fugue supported backends (spark, dask, ray, duckdb)</li>
+<li>Engine Config - configurations related to the cluster</li>
+<li>Secret Config - credentials to connect to a cluster</li>
+</ul>
+<p>For example, a Databricks Block could look like:</p>
+<ul>
+<li>Block Name - databricks</li>
+<li>Engine Name - spark</li>
+<li>Engine Config - None</li>
+<li>Secret Config - seen below</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;host&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://dbc-38aaa459-faaf.cloud.databricks.com&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;token&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dapiecaaae64a727498daaaaafe1bace968a&quot;</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="nt">&quot;cluster_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0612-191111-6fopaaaa&quot;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</code></pre></div>
+<h3 id="using-a-spark-cluster-inside-a-flow">Using a Spark Cluster Inside a Flow</h3>
+<p>Let’s start by running code on top of Databricks. <code>databricks-connect</code> is already installed in this environment. This section may have a lot of logs because of the monitoring provided by Prefect. This section also assumes that the user has Prefect configured to the right workspace.</p>
+<p>Below we have one task that takes in a <code>SparkSession</code> and uses it to run some Spark code. We can then use this in the Prefect Flow with the <code>fugue_engine</code> context. This <code>fugue_engine</code> will create an ephemeral cluster to run the code underneath, and then turn off when finished.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">prefect</span> <span class="kn">import</span> <span class="n">task</span><span class="p">,</span> <span class="n">flow</span>
+<span class="kn">from</span> <span class="nn">prefect_fugue</span> <span class="kn">import</span> <span class="n">fugue_engine</span>
 
+<span class="nd">@task</span>
+<span class="k">def</span> <span class="nf">my_spark_task</span><span class="p">(</span><span class="n">spark</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">([[</span><span class="sa">f</span><span class="s2">&quot;hello spark </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]],</span> <span class="s2">&quot;a string&quot;</span><span class="p">)</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 <span class="nd">@flow</span>
-<span class="k">def</span> <span class="nf">hello_flow</span><span class="p">():</span>
-    <span class="n">fsql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">    CREATE [[0]] SCHEMA a:int</span>
-<span class="s2">    PRINT</span>
-<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">native_spark_flow</span><span class="p">(</span><span class="n">engine</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">fugue_engine</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span> <span class="k">as</span> <span class="n">engine</span><span class="p">:</span>
+        <span class="n">my_spark_task</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">spark_session</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-<span class="n">hello_flow</span><span class="p">()</span>
+<span class="n">native_spark_flow</span><span class="p">(</span><span class="s2">&quot;fugue/databricks&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Similarly, if you don’t use Databricks but have your own way to get a <code>SparkSession</code>, you can directly pass the <code>SparkSession</code> into the Flow. The <code>fugue_engine</code> context will be able to interpret this.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">SparkSession</span>
+<span class="n">spark</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">getOrCreate</span><span class="p">()</span>
 
+<span class="n">native_spark_flow</span><span class="p">(</span><span class="n">spark</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="testing-locally-before-running-map-jobs-on-spark-dask-and-ray">Testing Locally Before Running Map Jobs on Spark, Dask, and Ray</h2>
+<p>We showed how to run Spark code on top of a Spark cluster, but the strength of Fugue is decoupling from distributed framework code such as Spark and Dask. Decoupling from these frameworks allows us to test code locally before scaling out to a cluster. In the example below, we simulate having a pandas DataFrame where each row is a job.</p>
+<p>When testing the Flow, we can pass <code>None</code> as the engine so everything runs on Pandas. When ready to scale out, we can pass in our <code>Block</code> or <code>SparkSession</code>. Fugue’s <code>transform()</code> task will use the engine provided by the <code>fugue_engine</code> context.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">prefect_fugue</span> <span class="kn">import</span> <span class="n">transform</span>
+
+<span class="nd">@task</span>
+<span class="k">def</span> <span class="nf">create_jobs</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">jobs</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
+
+<span class="c1"># schema: *,batch_size:str</span>
+<span class="k">def</span> <span class="nf">run_one_job</span><span class="p">(</span><span class="n">df</span><span class="p">:</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="n">sleep</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="o">*</span><span class="mi">5</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span>
 
 <span class="nd">@flow</span>
-<span class="k">def</span> <span class="nf">world_flow</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">engine</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">run_all_jobs</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">jobs</span> <span class="o">=</span> <span class="n">create_jobs</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">fugue_engine</span><span class="p">(</span><span class="n">engine</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">transform</span><span class="p">(</span><span class="n">jobs</span><span class="p">,</span> <span class="n">run_one_job</span><span class="p">,</span> <span class="n">partition</span><span class="o">=</span><span class="s2">&quot;per_row&quot;</span><span class="p">,</span> <span class="n">as_local</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<p>We can test the Flow above on a local machine without Spark. We run on one job first.</p>
+<div class="highlight"><pre><span></span><code><span class="n">run_all_jobs</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># run locally on Pandas</span>
+</code></pre></div>
+<p>Becasue it succeeded, we can now attach our Fugue Databricks <code>Block</code> to run on Databricks. Now we run on 8 jobs, and we’ll see that parallelization from the Spark cluster will make this Flow execute faster.</p>
+<div class="highlight"><pre><span></span><code><span class="n">run_all_jobs</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;fugue/databricks&quot;</span><span class="p">)</span> <span class="c1"># run on databricks</span>
+</code></pre></div>
+<p>There is still some overhead with sending the work, but the time is decreased compared to the expected execution time if ran sequentially (40 seconds).</p>
+<p>We can also use local Dask by passing the string <code>"dask"</code>. We can also pass a <code>Dask Client()</code> or use the Fugue Engine <code>Block</code> with <a href="https://coiled.io/">Coiled</a>. More information can be found in the <a href="https://fugue-tutorials.readthedocs.io/tutorials/integrations/cloudproviders/coiled.html">Coiled cloudprovider docs</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">run_all_jobs</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;dask&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="running-sql-on-any-spark-dask-and-duckdb">Running SQL on any Spark, Dask, and Duckdb</h2>
+<p>Prototyping locally, and then running the full job on the cluster is also possible with <a href="https://fugue-tutorials.readthedocs.io/tutorials/quick_look/ten_minutes_sql.html">FugueSQL</a>. DuckDB is a good engine to run SQL queries on flat files or Pandas DataFrames. When ready, we can bring it to SparkSQL on the cluster. Similar to the transform() task shown above, there is also an fsql() task.</p>
+<p>Here we can load in data and perform a query with FugueSQL. FugueSQL has additional keywords such as LOAD and SAVE so we can run everything from loading, processing, and saving all on DuckDB or SparkSQL. More information on FugueSQL can be found in the FugueSQL tutorials.</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@flow</span>
+<span class="k">def</span> <span class="nf">run_sql_full</span><span class="p">(</span><span class="n">top</span><span class="p">,</span> <span class="n">engine</span><span class="p">):</span>
     <span class="k">with</span> <span class="n">fugue_engine</span><span class="p">(</span><span class="n">engine</span><span class="p">):</span>
         <span class="n">fsql</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">        CREATE [[0],[1]] SCHEMA a:int</span>
-<span class="s2">        SELECT * WHERE a&gt;0</span>
-<span class="s2">        PRINT</span>
-<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+<span class="s2">        df = LOAD &quot;https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2022-01.parquet&quot;</span>
 
-<span class="n">world_flow</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;duckdb&quot;</span><span class="p">)</span>  <span class="c1"># running using duckdb (assuming duckdb is installed)</span>
-<span class="n">world_flow</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;fugue/my_databricks&quot;</span><span class="p">)</span>  <span class="c1"># running using my_databricks block on Prefect</span>
+<span class="s2">        SELECT PULocationID, COUNT(*) AS ct FROM df</span>
+<span class="s2">        GROUP BY 1 ORDER BY 2 DESC LIMIT {{top}}</span>
+<span class="s2">        PRINT</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="n">top</span><span class="p">)</span>
+</code></pre></div>
+<p>To debug locally without SparkSQL, we can use DuckDB as the engine.</p>
+<div class="highlight"><pre><span></span><code><span class="n">run_sql</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;duckdb&quot;</span><span class="p">);</span> <span class="c1"># debug/develop without spark</span>
+</code></pre></div>
+<p>Again to run on the cluster, we can use the Databricks Block.</p>
+<div class="highlight"><pre><span></span><code><span class="n">run_sql</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;fugue/databricks&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="resources">Resources</h2>
 <p>If you encounter any bugs while using <code>prefect-fugue</code>, feel free to open an issue in the <a href="https://github.com/fugue-project/prefect-fugue">prefect-fugue</a> repository.</p>
-<p>If you have any questions or issues while using <code>prefect-fugue</code>, you can find help in either the <a href="https://discourse.prefect.io/">Prefect Discourse forum</a> or the <a href="https://prefect.io/slack">Prefect Slack community</a>.</p>
+<p>If you have any questions or issues while using <code>prefect-fugue</code>, you can find help in the <a href="http://slack.fugue.ai">Fugue Slack community</a>.</p>
 <h2 id="development">Development</h2>
 <p>If you'd like to install a version of <code>prefect-fugue</code> for development, clone the repository and perform an editable install with <code>pip</code>:</p>
 <div class="highlight"><pre><span></span><code>git clone https://github.com/fugue-project/prefect-fugue.git
