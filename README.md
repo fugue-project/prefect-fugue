@@ -23,7 +23,7 @@ Using FugueSQL to define end-to-end workflows on top of pandas, Spark, and Dask 
 * Maintaining one codebase for pandas, Spark, Dask and Ray projects. Logic and execution are decoupled through Fugue, enabling users to be focused on their business logic rather than writing framework-specific code.
 * Improving iteration speed of big data projects. Fugue seamlessly scales execution to big data after local development and testing. By removing PySpark code, unit tests can be written in Python or pandas and ran locally without spinning up a cluster.
 
-![img](docs/img/fugue.png)
+![img](https://fugue-tutorials.readthedocs.io/_images/fugue_backends.png)
 
 The best way to get started with Fugue is to work through the 10 minute tutorials:
 
