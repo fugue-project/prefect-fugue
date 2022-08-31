@@ -42,7 +42,8 @@ def fsql(
 
     References:
         See: [Fugue SQL
-            Tutorial](https://fugue-tutorials.readthedocs.io/tutorials/fugue_sql/index.html)
+            Tutorial](https://fugue-tutorials.readthedocs.io/tutorials/quick_look/ten_minutes_sql.html)
+
 
     Example:
         ```python
