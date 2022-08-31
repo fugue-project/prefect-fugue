@@ -29,19 +29,19 @@ def fsql(
     This function generates the Prefect task that runs Fugue SQL.
 
     Args:
-        - query (str): the Fugue SQL query
-        - yields (Any): the yielded dataframes from the previous tasks,
+        query (str): the Fugue SQL query
+        yields (Any): the yielded dataframes from the previous tasks,
             defaults to None. It can be a single yielded result or an array of
             yielded results (see example)
-        - engine (Any): execution engine expression that can be recognized by Fugue,
+        engine (Any): execution engine expression that can be recognized by Fugue,
             default to None (the default ExecutionEngine of Fugue)
-        - engine_conf (Any): extra execution engine configs, defaults to None
-        - checkpoint (bool, optional): whether to checkpoint this task in Prefect,
+        engine_conf (Any): extra execution engine configs, defaults to None
+        checkpoint (bool, optional): whether to checkpoint this task in Prefect,
             defaults to None (determined by the ``fugue_engine`` context).
-        - **kwargs (Any, optional): additional kwargs to pass to Fugue's `fsql` function
+        **kwargs (Any, optional): additional kwargs to pass to Fugue's `fsql` function
 
     References:
-        - See: [Fugue SQL
+        See: [Fugue SQL
             Tutorial](https://fugue-tutorials.readthedocs.io/tutorials/fugue_sql/index.html)
 
     Example:
@@ -181,19 +181,19 @@ def transform(
     This function generates the Prefect task that runs Fugue transform.
 
     Args:
-        - df (Any): a dataframe or a file path generated from the previous steps
-        - transformer (Any): a function or class that be recognized by
+        df (Any): a dataframe or a file path generated from the previous steps
+        transformer (Any): a function or class that be recognized by
             Fugue as a transformer
-        - engine (Any): execution engine expression that can be recognized by Fugue,
+        engine (Any): execution engine expression that can be recognized by Fugue,
             default to None (the default ExecutionEngine of Fugue)
-        - engine_conf (Any): extra execution engine configs, defaults to None
-        - checkpoint (bool, optional): whether to checkpoint this task in Prefect,
+        engine_conf (Any): extra execution engine configs, defaults to None
+        checkpoint (bool, optional): whether to checkpoint this task in Prefect,
             defaults to None (determined by the ``fugue_engine`` context).
-        - **kwargs (Any, optional): additional kwargs to pass to
+        **kwargs (Any, optional): additional kwargs to pass to
             Fugue's `transform` function
 
     References:
-        - See: [Fugue
+        See: [Fugue
             Transform](https://fugue-tutorials.readthedocs.io/tutorials/extensions/transformer.html)
 
     Example:

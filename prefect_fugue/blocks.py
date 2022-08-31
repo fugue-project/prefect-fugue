@@ -18,9 +18,9 @@ class FugueEngine(Block):
     installed.
 
     Args:
-        - engine: Fugue ExecutionEngine name
-        - engine_conf: Fugue ExecutionEngine config
-        - secret_conf: Fugue ExecutionEngine config that should be encoded.
+        engine: Fugue ExecutionEngine name
+        engine_conf: Fugue ExecutionEngine config
+        secret_conf: Fugue ExecutionEngine config that should be encoded.
             For example the token for accessing Databricks.
 
     Note:
