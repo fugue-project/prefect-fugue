@@ -80,15 +80,17 @@ For example, a Databricks Block could look like:
 }
 ```
 
+As long as you installed `prefect_fugue`, Fugue is able to recognize and convert a block expression to a `FugueExecutionEngine`. For example if you have a block with path `fugue/databricks`, then the expression `prefect:fugue/databricks` becomes a valid execution engine expression. When fugue parse this expression, it will load the `Block` from `fugue/databricks`, then base on the fields of the block, it will construct a `DatabricksExecutionEngine` for your Fugue operations.
+
 ### Using a Spark Cluster Inside a Flow
 
 Let’s start by running code on top of Databricks. `databricks-connect` is already installed in this environment. This section may have a lot of logs because of the monitoring provided by Prefect. This section also assumes that the user has Prefect configured to the right workspace.
 
-Below we have one task that takes in a `SparkSession` and uses it to run some Spark code. We can then use this in the Prefect Flow with the `fugue_engine` context. This `fugue_engine` will create an ephemeral cluster to run the code underneath, and then turn off when finished.
+Below we have one task that takes in a `SparkSession` and uses it to run some Spark code. We can then use this in the Prefect Flow with the `fugue.api.engine_context`. This will create an ephemeral cluster to run the code underneath, and then turn off when finished.
 
 ```python
 from prefect import task, flow
-from prefect_fugue import fugue_engine
+import fugue.api as fa
 
 @task
 def my_spark_task(spark, n=1):
@@ -96,20 +98,53 @@ def my_spark_task(spark, n=1):
     df.show()
 
 @flow
-def native_spark_flow(engine):
-    with fugue_engine(engine) as engine:
-        my_spark_task(engine.spark_session, 1)
+def spark_flow(engine):
+    with fa.engine_context(engine) as spark_engine:
+        my_spark_task(spark_engine.spark_session, 1)
 
-native_spark_flow("fugue/databricks")
+spark_flow("prefect:fugue/databricks")  # pay attention to the engine expression
 ```
 
-Similarly, if you don’t use Databricks but have your own way to get a `SparkSession`, you can directly pass the `SparkSession` into the Flow. The `fugue_engine` context will be able to interpret this.
+Similarly, if you don’t use Databricks but have your own way to get a `SparkSession`, you can directly pass the `SparkSession` into the Flow.
 
 ```python
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.getOrCreate()
 
-native_spark_flow(spark)
+spark_flow(spark)
+```
+
+## More Flexibility
+
+`fugue.api.engine_context` creates a context under which all fugue operations will use the context engine by default. This works either the fugue code is directly under the context or inside the tasks or flows that are invoked under this context.
+
+```python
+from prefect import task, flow
+import fugue.api as fa
+
+def my_transformer(df:pd.DataFrame) -> pd.DataFrame:
+    return df
+
+@task
+def sub_task(path:str):
+    df = fa.load(path)
+    df = fa.transform(df, my_transformer, schema="*")
+    df.save(path+".output.parquet")
+
+@flow
+def sub_flow(path:str):
+    df = fa.load(path)
+    df = fa.transform(df, my_transformer, schema="*")
+    df.save(path+".output.parquet")
+
+@flow
+def main_flow(path, engine=None):
+    with fa.engine_context(engine) as spark_engine:
+        sub_task(path)
+        sub_flow(path)
+
+main_flow("<local path>")  # test locally, all tasks and flows run without Spark
+main_flow("<dbfs path>", "prefect:fugue/databricks")  # all tasks and flows will run on Databrickes
 ```
 
 ## Testing Locally Before Running Map Jobs on Spark, Dask, and Ray 
@@ -121,7 +156,8 @@ When testing the Flow, we can pass `None` as the engine so everything runs on Pa
 ```python
 from time import sleep
 import pandas as pd
-from prefect_fugue import transform
+import fugue.api as fa
+from prefect import task, flow
 
 @task
 def create_jobs(n) -> pd.DataFrame:
@@ -135,7 +171,7 @@ def run_one_job(df:pd.DataFrame) -> pd.DataFrame:
 @flow
 def run_all_jobs(n, engine=None):
     jobs = create_jobs(n)
-    with fugue_engine(engine):
+    with fa.engine_context(engine):
         return transform(jobs, run_one_job, partition="per_row", as_local=True)
 ```
 
@@ -148,7 +184,7 @@ run_all_jobs(1) # run locally on Pandas
 Becasue it succeeded, we can now attach our Fugue Databricks `Block` to run on Databricks. Now we run on 8 jobs, and we’ll see that parallelization from the Spark cluster will make this Flow execute faster.
 
 ```python
-run_all_jobs(8, "fugue/databricks") # run on databricks
+run_all_jobs(8, "prefect:fugue/databricks") # run on databricks
 ```
 
 There is still some overhead with sending the work, but the time is decreased compared to the expected execution time if ran sequentially (40 seconds).
@@ -156,7 +192,7 @@ There is still some overhead with sending the work, but the time is decreased co
 We can also use local Dask by passing the string `"dask"`. We can also pass a `Dask Client()` or use the Fugue Engine `Block` with [Coiled](https://coiled.io/). More information can be found in the [Coiled cloudprovider docs](https://fugue-tutorials.readthedocs.io/tutorials/integrations/cloudproviders/coiled.html).
 
 ```python
-run_all_jobs(4, "dask")
+run_all_jobs(4, dask_client)
 ```
 
 ## Running SQL on any Spark, Dask, and Duckdb
@@ -166,16 +202,18 @@ Prototyping locally, and then running the full job on the cluster is also possib
 Here we can load in data and perform a query with FugueSQL. FugueSQL has additional keywords such as LOAD and SAVE so we can run everything from loading, processing, and saving all on DuckDB or SparkSQL. More information on FugueSQL can be found in the FugueSQL tutorials.
 
 ```python
+import fugue.api as fa
+
 @flow
-def run_sql_full(top, engine):
-    with fugue_engine(engine):
-        fsql("""
+def run_sql(top, engine):
+    with fa.engine_context(engine):
+        fa.fugue_sql_flow("""
         df = LOAD "https://d37ci6vzurychx.cloudfront.net/trip-data/green_tripdata_2022-01.parquet"
 
         SELECT PULocationID, COUNT(*) AS ct FROM df
         GROUP BY 1 ORDER BY 2 DESC LIMIT {{top}}
         PRINT
-        """, top=top)
+        """, top=top).run()
 ```
 
 To debug locally without SparkSQL, we can use DuckDB as the engine.
@@ -187,7 +225,7 @@ run_sql(2, "duckdb"); # debug/develop without spark
 Again to run on the cluster, we can use the Databricks Block.
 
 ```python
-run_sql(10, "fugue/databricks")
+run_sql(10, "prefect:fugue/databricks")
 ```
 
 ## Resources

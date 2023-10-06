@@ -1,14 +1,45 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Type
 
-from fugue import (
-    ExecutionEngine,
-    make_execution_engine,
-    parse_execution_engine,
-    register_execution_engine,
-)
+from fugue import ExecutionEngine
+from fugue._utils.registry import fugue_plugin
+from fugue.dev import make_execution_engine
 from prefect.blocks.core import Block
 from pydantic import Field, SecretStr
-from triad import ParamDict, assert_or_throw, run_at_def
+from triad import ParamDict
+
+
+def block_to_fugue_engine(block_type: Type[Block]) -> Any:
+    """
+    Convert a Prefect Block to a Fugue ExecutionEngine
+
+    Args:
+        block (Block): the block to be converted
+        conf (Any): the config to initialize the block
+
+    Returns:
+        ExecutionEngine: the converted Fugue ExecutionEngine
+
+    Example:
+
+        .. code-block:: python
+
+            from prefect_fugue import block_to_fugue_engine
+            from fugue.dev import make_execution_engine
+
+            @block_to_fugue_engine(MyBlock)
+            def my_block_to_fugue_engine(
+                block: MyBlock, conf: Any=None) -> ExecutionEngine:
+                return make_execution_engine(block.name, conf)
+
+    """
+    return _block_to_fugue_engine.candidate(
+        lambda block, *args, **kwargs: isinstance(block, block_type)
+    )  # noqa
+
+
+@fugue_plugin
+def _block_to_fugue_engine(block: Block, conf: Any = None) -> ExecutionEngine:
+    raise NotImplementedError(f"{type(Block)} to Fugue Engine is not registered")
 
 
 class FugueEngine(Block):
@@ -46,28 +77,14 @@ class FugueEngine(Block):
         description="A JSON-dict-compatible value",
     )
 
-    def make_engine(self, custom_conf: Any = None) -> ExecutionEngine:
-        conf = ParamDict(self.conf)
-        if self.secret_conf is not None:
-            for k, v in self.secret_conf.items():
-                conf[k] = v.get_secret_value()
-        conf.update(ParamDict(custom_conf))
-        return make_execution_engine(self.engine, conf)
 
-
-@parse_execution_engine.candidate(
-    matcher=lambda engine, conf, **kwargs: isinstance(engine, str) and "/" in engine
-)
-def _parse_config_engine(engine: Any, conf: Any, **kwargs: Any) -> ExecutionEngine:
-    block = Block.load(engine)
-    assert_or_throw(
-        isinstance(block, FugueEngine), f"{block} is not a FugueEngine config block"
-    )
-    return make_execution_engine(block, conf=conf)
-
-
-@run_at_def
-def _register():
-    register_execution_engine(
-        FugueEngine, lambda engine, conf, **kwargs: engine.make_engine(conf)
-    )
+@block_to_fugue_engine(FugueEngine)
+def _fugue_block_to_fugue_engine(
+    block: FugueEngine, conf: Any = None
+) -> ExecutionEngine:
+    _conf = ParamDict(block.conf)
+    if block.secret_conf is not None:
+        for k, v in block.secret_conf.items():
+            _conf[k] = v.get_secret_value()
+    _conf.update(ParamDict(conf))
+    return make_execution_engine(block.engine, _conf)

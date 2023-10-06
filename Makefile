@@ -14,6 +14,9 @@ devenv:
 	pre-commit install
 	fugue-jupyter install startup
 
+login:
+	prefect cloud login -k $(PREFECT_API_KEY)
+
 docs:
 	rm -rf docs/api
 	rm -rf docs/build
