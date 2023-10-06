@@ -29,10 +29,9 @@ jobs:
           python -m pip install --upgrade --upgrade-strategy eager -e ".[dev]"
 
       - name: Run tests
-        env:
-          PREFECT_ORION_DATABASE_CONNECTION_URL: "sqlite+aiosqlite:///./orion-tests.db"
         run: |
-          prefect orion database reset -y
+          prefect config set PREFECT_API_DATABASE_CONNECTION_URL="sqlite+aiosqlite:///./orion-tests.db"
+          prefect server database reset -y
           coverage run --branch -m pytest tests -vv
           coverage report
       - name: "Upload coverage to Codecov"

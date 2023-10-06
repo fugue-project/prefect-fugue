@@ -32,11 +32,9 @@ The best way to get started with Fugue is to work through the 10 minute tutorial
 
 ### Python setup
 
-Requires an installation of Python 3.7+.
+Requires an installation of Python 3.8+.
 
 We recommend using a Python virtual environment manager such as pipenv, conda or virtualenv.
-
-These tasks are designed to work with Prefect 2.0. For more information about how to use Prefect, please refer to the [Prefect documentation](https://orion-docs.prefect.io/).
 
 ### Installation
 
