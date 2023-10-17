@@ -3,7 +3,7 @@ black
 flake8
 mypy
 mkdocs
-mkdocs-material
+mkdocs-material>=9.4.6
 mkdocstrings[python]
 isort
 pre-commit
