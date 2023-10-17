@@ -3,8 +3,8 @@ from typing import Any, Dict, Optional, Type
 from fugue import ExecutionEngine
 from fugue._utils.registry import fugue_plugin
 from fugue.dev import make_execution_engine
-from prefect.blocks.core import Block
-from pydantic import Field, SecretStr
+from prefect.blocks.core import Block, SecretDict
+from prefect.blocks.system import Field
 from triad import ParamDict
 
 
@@ -63,7 +63,7 @@ class FugueEngine(Block):
     _block_type_name = "Fugue Engine"
     _block_type_slug = "fugue"
     _logo_url = "https://avatars.githubusercontent.com/u/65140352?s=200&v=4"  # noqa
-    _description = "Configs that can consturct a Fugue Execution Engine"
+    _description = "Configs for consturcting a Fugue Execution Engine"
 
     engine: str = Field(..., alias="engine_name")
     conf: Optional[Dict[str, Any]] = Field(
@@ -71,7 +71,7 @@ class FugueEngine(Block):
         alias="engine_config",
         description="A JSON-dict-compatible value",
     )
-    secret_conf: Optional[Dict[str, SecretStr]] = Field(
+    secret_conf: Optional[SecretDict] = Field(
         default=None,
         alias="secret_config",
         description="A JSON-dict-compatible value",
@@ -84,7 +84,6 @@ def _fugue_block_to_fugue_engine(
 ) -> ExecutionEngine:
     _conf = ParamDict(block.conf)
     if block.secret_conf is not None:
-        for k, v in block.secret_conf.items():
-            _conf[k] = v.get_secret_value()
+        _conf.update(block.secret_conf.get_secret_value())
     _conf.update(ParamDict(conf))
     return make_execution_engine(block.engine, _conf)
