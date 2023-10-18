@@ -1,2 +1,2 @@
-prefect>=2.0.1
+prefect>=2.8.1
 fugue>=0.8.6

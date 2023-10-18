@@ -3,7 +3,6 @@ from typing import Any, List
 import fugue.api as fa
 from fugue import ExecutionEngine
 from prefect import flow
-from pydantic import SecretStr
 
 from prefect_fugue import FugueEngine
 
@@ -14,7 +13,7 @@ def test_fugue_engine_block(mocker):
         return_value=FugueEngine(
             engine_name="duckdb",
             engine_config={"b": "1"},
-            secret_config={"a": SecretStr(value="xyz")},
+            secret_config={"a": "xyz"},
         ),
     )
 
